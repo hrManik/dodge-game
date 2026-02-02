@@ -3,24 +3,46 @@ const gameArea = document.querySelector('.game-area');
 const scoreEl = document.getElementById('score');
 const restartBtn = document.getElementById('restartBtn');
 
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+
 let playerPos = 180;
 let score = 0;
 let gameInterval;
 let blocks = [];
 let speed = 2;
 
-// Move player
+// --- Player Movement ---
+// Keyboard controls
 document.addEventListener('keydown', (e) => {
-    if(e.key === 'ArrowLeft' && playerPos > 0){
-        playerPos -= 20;
-    }
-    if(e.key === 'ArrowRight' && playerPos < 360){
-        playerPos += 20;
-    }
+    if(e.key === 'ArrowLeft' && playerPos > 0) playerPos -= 20;
+    if(e.key === 'ArrowRight' && playerPos < 360) playerPos += 20;
     player.style.left = playerPos + 'px';
 });
 
-// Create falling blocks
+// Mobile button touch controls
+leftBtn.addEventListener('touchstart', () => {
+    if(playerPos > 0) playerPos -= 20;
+    player.style.left = playerPos + 'px';
+});
+rightBtn.addEventListener('touchstart', () => {
+    if(playerPos < 360) playerPos += 20;
+    player.style.left = playerPos + 'px';
+});
+
+// Swipe controls
+let touchStartX = 0;
+gameArea.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+});
+gameArea.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    if(touchEndX < touchStartX - 20 && playerPos > 0) playerPos -= 20; // swipe left
+    if(touchEndX > touchStartX + 20 && playerPos < 360) playerPos += 20; // swipe right
+    player.style.left = playerPos + 'px';
+});
+
+// --- Create Falling Blocks ---
 function createBlock() {
     const block = document.createElement('div');
     block.classList.add('block');
@@ -30,7 +52,7 @@ function createBlock() {
     blocks.push(block);
 }
 
-// Update game loop
+// --- Update Game ---
 function updateGame() {
     score++;
     scoreEl.textContent = "Score: " + score;
@@ -40,7 +62,7 @@ function updateGame() {
         blockTop += speed;
         block.style.top = blockTop + 'px';
 
-        // Check collision
+        // Collision detection
         let blockLeft = parseInt(block.style.left);
         if(blockTop + 40 >= 560 && blockTop <= 600 && blockLeft === playerPos){
             clearInterval(gameInterval);
@@ -55,13 +77,15 @@ function updateGame() {
     });
 }
 
-// Start game
+// --- Start Game ---
 function startGame() {
     score = 0;
     blocks.forEach(b => gameArea.removeChild(b));
     blocks = [];
     playerPos = 180;
     player.style.left = playerPos + 'px';
+
+    clearInterval(gameInterval); // stop previous interval
     gameInterval = setInterval(() => {
         if(Math.random() < 0.03) createBlock();
         updateGame();
@@ -70,14 +94,5 @@ function startGame() {
 
 restartBtn.addEventListener('click', startGame);
 
-// Initial start
+// Start automatically
 startGame();
-document.getElementById('leftBtn').addEventListener('click', () => {
-    if(playerPos > 0) playerPos -= 20;
-    player.style.left = playerPos + 'px';
-});
-
-document.getElementById('rightBtn').addEventListener('click', () => {
-    if(playerPos < 360) playerPos += 20;
-    player.style.left = playerPos + 'px';
-});
